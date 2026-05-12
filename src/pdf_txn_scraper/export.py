@@ -26,16 +26,19 @@ def export_accounting_csv(transactions: Iterable[Transaction], path: str | Path)
     transaction_rows = list(transactions)
     rows = []
     for transaction in transaction_rows:
-        rows.append(transaction.as_dict())
+        original_row = transaction.as_dict()
+        original_row["account"] = "1910"
+        rows.append(original_row)
         row = transaction.as_dict()
         row["amount"] = str(-transaction.amount)
+        row["account"] = "1777"
         rows.append(row)
     _write_csv_rows(rows, path)
 
 
 def _write_csv_rows(rows: list[dict[str, Any]], path: str | Path) -> None:
     """Write CSV rows while preserving known fields first and metadata after."""
-    fieldnames = ["date", "description", "amount", "page", "category", "notes", "ignored", "raw"]
+    fieldnames = ["date", "description", "amount", "account", "page", "category", "notes", "ignored", "raw"]
     for row in rows:
         for key in row:
             if key not in fieldnames:

@@ -35,6 +35,10 @@ def test_export_accounting_csv_appends_inverted_amount_rows(tmp_path):
 
     with output.open(newline="", encoding="utf-8") as handle:
         exported = list(csv.DictReader(handle))
+    assert exported[0]["account"] == "1910"
+    assert exported[1]["account"] == "1777"
+    assert exported[2]["account"] == "1910"
+    assert exported[3]["account"] == "1777"
     assert [row["description"] for row in exported] == ["Sale", "Sale", "Fee", "Fee"]
     assert [row["amount"] for row in exported] == ["10.00", "-10.00", "-2.50", "2.50"]
 
