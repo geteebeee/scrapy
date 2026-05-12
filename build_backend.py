@@ -15,10 +15,15 @@ import io
 import os
 import re
 import tarfile
-import tomllib
 import zipfile
+from ast import literal_eval
 from pathlib import Path
 from typing import Any
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on Python 3.10.
+    tomllib = None
 
 ROOT = Path(__file__).parent.resolve()
 SRC = ROOT / "src"
@@ -26,7 +31,79 @@ PYPROJECT = ROOT / "pyproject.toml"
 
 
 def _pyproject() -> dict[str, Any]:
-    return tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    text = PYPROJECT.read_text(encoding="utf-8")
+    if tomllib is not None:
+        return tomllib.loads(text)
+    return _parse_project_metadata(text)
+
+
+def _parse_project_metadata(text: str) -> dict[str, Any]:
+    project: dict[str, Any] = {}
+    optional_dependencies: dict[str, list[str]] = {}
+    scripts: dict[str, str] = {}
+    section = ""
+    pending_key: str | None = None
+    pending_lines: list[str] = []
+
+    def finish_pending() -> None:
+        nonlocal pending_key, pending_lines
+        if pending_key is None:
+            return
+        value = literal_eval("\n".join(pending_lines))
+        if section == "project":
+            project[pending_key] = value
+        elif section == "project.optional-dependencies":
+            optional_dependencies[pending_key] = value
+        pending_key = None
+        pending_lines = []
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if pending_key is not None:
+            pending_lines.append(line)
+            if line == "]":
+                finish_pending()
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            finish_pending()
+            section = line.strip("[]")
+            continue
+        if "=" not in line:
+            continue
+        key, raw_value = (part.strip() for part in line.split("=", 1))
+        if raw_value == "[":
+            pending_key = key
+            pending_lines = [raw_value]
+            continue
+        if section == "project":
+            project[key] = _parse_toml_value(raw_value)
+        elif section == "project.optional-dependencies":
+            optional_dependencies[key] = _parse_toml_value(raw_value)
+        elif section == "project.scripts":
+            scripts[key] = _parse_toml_value(raw_value)
+
+    finish_pending()
+    if optional_dependencies:
+        project["optional-dependencies"] = optional_dependencies
+    if scripts:
+        project["scripts"] = scripts
+    return {"project": project}
+
+
+def _parse_toml_value(raw_value: str) -> Any:
+    if raw_value.startswith("{") and raw_value.endswith("}"):
+        table: dict[str, Any] = {}
+        for item in raw_value.strip("{}").split(","):
+            if not item.strip():
+                continue
+            key, value = (part.strip() for part in item.split("=", 1))
+            table[key] = _parse_toml_value(value)
+        return table
+    if raw_value.startswith("[{") and raw_value.endswith("}]"):
+        return [_parse_toml_value(raw_value[1:-1])]
+    return literal_eval(raw_value)
 
 
 def _project() -> dict[str, Any]:

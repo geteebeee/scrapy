@@ -15,6 +15,11 @@ For local development and tests:
 python -m pip install -e '.[dev]'
 ```
 
+The project includes a small PEP 660-compatible build backend, so editable
+installs do not depend on the version of `setuptools` already installed in your
+environment. If you are offline and already have the runtime dependencies
+installed, you can use `python -m pip install -e . --no-deps`.
+
 ## GUI usage
 
 Launch the desktop app after installation:
@@ -39,6 +44,8 @@ In the GUI you can:
   rows, delete rows, or toggle rows as ignored.
 - Export reviewed transactions to CSV or JSON. Ignored rows are excluded unless
   you choose to include them during export.
+- Export Accounting writes a CSV with the reviewed rows followed by matching
+  debit/credit rows where each amount is multiplied by `-1`.
 
 ## Build a Windows `.exe`
 

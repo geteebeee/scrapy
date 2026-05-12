@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from .models import Transaction
 
@@ -18,6 +18,23 @@ def active_transactions(transactions: Iterable[Transaction]) -> list[Transaction
 def export_csv(transactions: Iterable[Transaction], path: str | Path) -> None:
     """Write transactions to CSV."""
     rows = [transaction.as_dict() for transaction in transactions]
+    _write_csv_rows(rows, path)
+
+
+def export_accounting_csv(transactions: Iterable[Transaction], path: str | Path) -> None:
+    """Write transactions, then mirrored debit/credit rows with inverted amounts."""
+    transaction_rows = list(transactions)
+    rows = []
+    for transaction in transaction_rows:
+        rows.append(transaction.as_dict())
+        row = transaction.as_dict()
+        row["amount"] = str(-transaction.amount)
+        rows.append(row)
+    _write_csv_rows(rows, path)
+
+
+def _write_csv_rows(rows: list[dict[str, Any]], path: str | Path) -> None:
+    """Write CSV rows while preserving known fields first and metadata after."""
     fieldnames = ["date", "description", "amount", "page", "category", "notes", "ignored", "raw"]
     for row in rows:
         for key in row:
