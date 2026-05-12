@@ -25,6 +25,8 @@ build = [
 
 [project.scripts]
 pdf-txn-scraper = "pdf_txn_scraper.cli:main"
+
+[project.gui-scripts]
 pdf-txn-scraper-gui = "pdf_txn_scraper.gui:main"
 
 [tool.pytest.ini_options]

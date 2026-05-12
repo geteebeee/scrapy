@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pdf_txn_scraper.interactive import TransactionShell
+from pdf_txn_scraper.interactive import TransactionShell, _split_command
 from pdf_txn_scraper.models import Transaction
 
 
@@ -16,3 +16,9 @@ def test_shell_edit_split_merge_and_ignore():
     assert len(rows) == 1
     assert rows[0].description == "Updated merchant Second row"
     assert rows[0].ignored is True
+
+
+def test_shell_command_split_preserves_windows_paths():
+    parts = _split_command(r'"C:\Users\Grego\my rows.csv" --format json --all', windows=True)
+
+    assert parts == [r"C:\Users\Grego\my rows.csv", "--format", "json", "--all"]

@@ -3,12 +3,22 @@
 from __future__ import annotations
 
 import cmd
+import os
 import shlex
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from .export import active_transactions, export_csv, export_json
 from .models import Transaction
+
+
+def _split_command(arg: str, *, windows: bool | None = None) -> list[str]:
+    """Split shell command arguments without eating Windows path separators."""
+    if windows is None:
+        windows = os.name == "nt"
+    if windows:
+        arg = arg.replace("\\", "\\\\")
+    return shlex.split(arg)
 
 
 class TransactionShell(cmd.Cmd):
@@ -47,7 +57,7 @@ class TransactionShell(cmd.Cmd):
     def do_edit(self, arg: str) -> None:
         """edit INDEX FIELD VALUE: edit date, description, amount, category, notes, or raw."""
         try:
-            parts = shlex.split(arg)
+            parts = _split_command(arg)
         except ValueError as exc:
             print(exc)
             return
@@ -83,7 +93,7 @@ class TransactionShell(cmd.Cmd):
     def do_split(self, arg: str) -> None:
         """split INDEX DATE DESCRIPTION AMOUNT: insert a new row after INDEX."""
         try:
-            parts = shlex.split(arg)
+            parts = _split_command(arg)
             if len(parts) != 4:
                 raise ValueError
             index_text, date, description, amount_text = parts
@@ -104,7 +114,7 @@ class TransactionShell(cmd.Cmd):
     def do_merge(self, arg: str) -> None:
         """merge LEFT_INDEX RIGHT_INDEX: append right description/raw to left and remove right."""
         try:
-            left_index, right_index = [int(part) for part in shlex.split(arg)]
+            left_index, right_index = [int(part) for part in _split_command(arg)]
         except ValueError:
             print("Usage: merge LEFT_INDEX RIGHT_INDEX")
             return
@@ -123,7 +133,7 @@ class TransactionShell(cmd.Cmd):
     def do_export(self, arg: str) -> None:
         """export PATH [--format csv|json] [--all]: export reviewed rows."""
         try:
-            parts = shlex.split(arg)
+            parts = _split_command(arg)
         except ValueError as exc:
             print(exc)
             return

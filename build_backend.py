@@ -41,6 +41,7 @@ def _parse_project_metadata(text: str) -> dict[str, Any]:
     project: dict[str, Any] = {}
     optional_dependencies: dict[str, list[str]] = {}
     scripts: dict[str, str] = {}
+    gui_scripts: dict[str, str] = {}
     section = ""
     pending_key: str | None = None
     pending_lines: list[str] = []
@@ -83,12 +84,16 @@ def _parse_project_metadata(text: str) -> dict[str, Any]:
             optional_dependencies[key] = _parse_toml_value(raw_value)
         elif section == "project.scripts":
             scripts[key] = _parse_toml_value(raw_value)
+        elif section == "project.gui-scripts":
+            gui_scripts[key] = _parse_toml_value(raw_value)
 
     finish_pending()
     if optional_dependencies:
         project["optional-dependencies"] = optional_dependencies
     if scripts:
         project["scripts"] = scripts
+    if gui_scripts:
+        project["gui-scripts"] = gui_scripts
     return {"project": project}
 
 
@@ -181,11 +186,20 @@ def _wheel() -> str:
 
 def _entry_points() -> str:
     scripts = _project().get("scripts", {})
-    if not scripts:
+    gui_scripts = _project().get("gui-scripts", {})
+    if not scripts and not gui_scripts:
         return ""
-    lines = ["[console_scripts]"]
-    for name, target in sorted(scripts.items()):
-        lines.append(f"{name} = {target}")
+    lines = []
+    if scripts:
+        lines.append("[console_scripts]")
+        for name, target in sorted(scripts.items()):
+            lines.append(f"{name} = {target}")
+    if gui_scripts:
+        if lines:
+            lines.append("")
+        lines.append("[gui_scripts]")
+        for name, target in sorted(gui_scripts.items()):
+            lines.append(f"{name} = {target}")
     return "\n".join(lines) + "\n"
 
 

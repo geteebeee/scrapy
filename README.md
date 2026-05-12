@@ -12,7 +12,7 @@ python -m pip install -e .
 For local development and tests:
 
 ```bash
-python -m pip install -e '.[dev]'
+python -m pip install -e ".[dev]"
 ```
 
 The project includes a small PEP 660-compatible build backend, so editable
@@ -49,10 +49,23 @@ In the GUI you can:
 
 ## Build a Windows `.exe`
 
-Install the build extras and run the checked-in PyInstaller build script:
+Build the `.exe` on a Windows machine. The generated file bundles Python and the
+app dependencies, so the destination PC does not need Python installed.
+
+From PowerShell or Command Prompt:
 
 ```bash
-python -m pip install -e '.[build]'
+py -m venv .venv
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -e ".[build]"
+.venv\Scripts\python scripts\build_exe.py
+```
+
+If you are already in a Python environment on Windows, this shorter version is
+also fine:
+
+```bash
+python -m pip install -e ".[build]"
 python scripts/build_exe.py
 ```
 
@@ -62,15 +75,16 @@ The generated executable is written to:
 dist/pdf-transaction-scraper-gui.exe
 ```
 
+Copy that single `.exe` file to the destination PC and run it there.
+
 You can also run the `Build Windows GUI executable` GitHub Actions workflow on a
 Windows runner to produce the same `.exe` as a downloadable artifact.
 
 The build uses `pdf-transaction-scraper-gui.spec`, with `console=False`, so the
-result is a windowed desktop app instead of a console application.
+result is a standalone, windowed desktop app instead of a console application.
 
-> Note: Build the Windows `.exe` on Windows for the most reliable result.
-> PyInstaller generally does not cross-compile Windows executables from Linux or
-> macOS.
+> Note: PyInstaller does not cross-compile Windows executables from Linux or
+> macOS, so run the build on Windows or use the GitHub Actions workflow.
 
 ## CLI usage
 

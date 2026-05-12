@@ -1,10 +1,14 @@
 from pathlib import Path
 
-from pdf_txn_scraper import gui
+import pytest
+
 from pdf_txn_scraper.cli import build_parser
 
 
 def test_gui_module_exposes_main_without_starting_tk():
+    pytest.importorskip("tkinter")
+    from pdf_txn_scraper import gui
+
     assert callable(gui.main)
     assert gui.TransactionScraperApp.columns[:3] == ("ignored", "date", "description")
     assert callable(gui.TransactionScraperApp.export_accounting_rows)

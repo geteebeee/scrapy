@@ -1,14 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 """PyInstaller spec for the PDF Transaction Scraper GUI."""
 
+from pathlib import Path
+
 from PyInstaller.utils.hooks import collect_submodules
 
+ROOT = Path(SPECPATH).resolve()
 hiddenimports = collect_submodules("pypdf")
 
 
 a = Analysis(
-    ["scripts/gui_entry.py"],
-    pathex=["src"],
+    [str(ROOT / "scripts" / "gui_entry.py")],
+    pathex=[str(ROOT / "src")],
     binaries=[],
     datas=[],
     hiddenimports=hiddenimports,
