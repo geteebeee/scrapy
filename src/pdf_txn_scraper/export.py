@@ -44,7 +44,18 @@ def _write_csv_rows(rows: list[dict[str, Any]], path: str | Path) -> None:
     with Path(path).open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows(_single_line_csv_row(row) for row in rows)
+
+
+def _single_line_csv_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Return a CSV row with embedded line breaks flattened inside cells."""
+    return {key: _single_line_csv_value(value) for key, value in row.items()}
+
+
+def _single_line_csv_value(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    return " ".join(line.strip() for line in value.splitlines())
 
 
 def export_json(transactions: Iterable[Transaction], path: str | Path) -> None:

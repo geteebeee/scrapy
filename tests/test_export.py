@@ -2,7 +2,7 @@ import csv
 import json
 from decimal import Decimal
 
-from pdf_txn_scraper.export import active_transactions, export_accounting_csv, export_json
+from pdf_txn_scraper.export import active_transactions, export_accounting_csv, export_csv, export_json
 from pdf_txn_scraper.models import Transaction
 
 
@@ -37,3 +37,21 @@ def test_export_accounting_csv_appends_inverted_amount_rows(tmp_path):
         exported = list(csv.DictReader(handle))
     assert [row["description"] for row in exported] == ["Sale", "Sale", "Fee", "Fee"]
     assert [row["amount"] for row in exported] == ["10.00", "-10.00", "-2.50", "2.50"]
+
+
+def test_export_csv_writes_one_physical_line_per_transaction(tmp_path):
+    output = tmp_path / "transactions.csv"
+    rows = [
+        Transaction("01/01", "Coffee\nShop", Decimal("-4.50"), "01/01 Coffee\nShop\n-4.50"),
+        Transaction("01/02", "Groceries", Decimal("-12.30"), "01/02 Groceries\r\n-12.30"),
+    ]
+
+    export_csv(rows, output)
+
+    lines = output.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 3
+    with output.open(newline="", encoding="utf-8") as handle:
+        exported = list(csv.DictReader(handle))
+    assert exported[0]["description"] == "Coffee Shop"
+    assert exported[0]["raw"] == "01/01 Coffee Shop -4.50"
+    assert exported[1]["raw"] == "01/02 Groceries -12.30"
