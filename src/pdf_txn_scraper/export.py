@@ -9,6 +9,8 @@ from typing import Any, Iterable
 
 from .models import Transaction
 
+MAX_CSV_TEXT_LENGTH = 190
+
 
 def active_transactions(transactions: Iterable[Transaction]) -> list[Transaction]:
     """Return transactions not marked ignored."""
@@ -52,13 +54,16 @@ def _write_csv_rows(rows: list[dict[str, Any]], path: str | Path) -> None:
 
 def _single_line_csv_row(row: dict[str, Any]) -> dict[str, Any]:
     """Return a CSV row with embedded line breaks flattened inside cells."""
-    return {key: _single_line_csv_value(value) for key, value in row.items()}
+    return {key: _single_line_csv_value(key, value) for key, value in row.items()}
 
 
-def _single_line_csv_value(value: Any) -> Any:
+def _single_line_csv_value(key: str, value: Any) -> Any:
     if not isinstance(value, str):
         return value
-    return " ".join(line.strip() for line in value.splitlines())
+    single_line = " ".join(line.strip() for line in value.splitlines())
+    if key == "amount":
+        return single_line.replace(".", ",")
+    return single_line[:MAX_CSV_TEXT_LENGTH]
 
 
 def export_json(transactions: Iterable[Transaction], path: str | Path) -> None:

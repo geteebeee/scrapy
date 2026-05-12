@@ -14,4 +14,4 @@ def test_cli_exports_plain_text_non_interactively(tmp_path):
     with output.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert rows[0]["description"] == "Coffee"
-    assert rows[0]["amount"] == "-4.50"
+    assert rows[0]["amount"] == "-4,50"

@@ -87,7 +87,7 @@ def test_parse_transactions_finds_nordea_statement_blocks():
     assert transactions[1].amount == Decimal("-7.00")
 
 
-def test_parse_transactions_splits_nordea_glued_transaction_number():
+def test_parse_transactions_skips_nordea_service_fee_detail_sums():
     text = """
     Kausi
     01.06.2025 - 30.06.2025
@@ -113,4 +113,4 @@ def test_parse_transactions_splits_nordea_glued_transaction_number():
 
     transactions = parse_transactions([(1, text)])
 
-    assert [transaction.amount for transaction in transactions] == [Decimal("-16.74"), Decimal("-0.58")]
+    assert [transaction.amount for transaction in transactions] == [Decimal("-16.74")]

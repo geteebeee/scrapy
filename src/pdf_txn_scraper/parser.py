@@ -82,7 +82,15 @@ def _format_nordea_date(day: str, month: str, year: int | None) -> str:
     return f"{day}.{month}.{year}"
 
 
-def _parse_nordea_amount_line(line: str, transaction_number: int | None) -> tuple[int | None, Decimal] | None:
+def _is_nordea_service_fee_block(block: _NordeaBlock) -> bool:
+    return any("palvelumaksu" in line.lower() for line in block.description)
+
+
+def _parse_nordea_amount_line(
+    line: str,
+    transaction_number: int | None,
+    block: _NordeaBlock,
+) -> tuple[int | None, Decimal] | None:
     match = NORDEA_AMOUNT_PATTERN.match(line)
     if not match:
         return None
@@ -91,6 +99,9 @@ def _parse_nordea_amount_line(line: str, transaction_number: int | None) -> tupl
     amount_text = match.group("amount")
     if number is not None:
         return int(number), parse_amount(amount_text)
+
+    if _is_nordea_service_fee_block(block):
+        return None
 
     if transaction_number is not None and line.startswith(str(transaction_number)):
         amount_text = line[len(str(transaction_number)) :]
@@ -165,7 +176,7 @@ def _parse_nordea_transactions(pages: Iterable[tuple[int | None, str]]) -> list[
             continue
 
         block.raw.append(line)
-        amount_line = _parse_nordea_amount_line(line, transaction_number)
+        amount_line = _parse_nordea_amount_line(line, transaction_number, block)
         if amount_line is not None:
             number, amount = amount_line
             transaction_number = number

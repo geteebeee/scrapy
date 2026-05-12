@@ -40,7 +40,7 @@ def test_export_accounting_csv_appends_inverted_amount_rows(tmp_path):
     assert exported[2]["account"] == "1910"
     assert exported[3]["account"] == "1777"
     assert [row["description"] for row in exported] == ["Sale", "Sale", "Fee", "Fee"]
-    assert [row["amount"] for row in exported] == ["10.00", "-10.00", "-2.50", "2.50"]
+    assert [row["amount"] for row in exported] == ["10,00", "-10,00", "-2,50", "2,50"]
 
 
 def test_export_csv_writes_one_physical_line_per_transaction(tmp_path):
@@ -57,5 +57,19 @@ def test_export_csv_writes_one_physical_line_per_transaction(tmp_path):
     with output.open(newline="", encoding="utf-8") as handle:
         exported = list(csv.DictReader(handle))
     assert exported[0]["description"] == "Coffee Shop"
+    assert exported[0]["amount"] == "-4,50"
     assert exported[0]["raw"] == "01/01 Coffee Shop -4.50"
     assert exported[1]["raw"] == "01/02 Groceries -12.30"
+
+
+def test_export_csv_limits_text_fields_to_190_characters(tmp_path):
+    output = tmp_path / "transactions.csv"
+    long_description = "A" * 220
+    rows = [Transaction("01/01", long_description, Decimal("-4.50"), "raw")]
+
+    export_csv(rows, output)
+
+    with output.open(newline="", encoding="utf-8") as handle:
+        exported = list(csv.DictReader(handle))
+    assert exported[0]["description"] == "A" * 190
+    assert exported[0]["amount"] == "-4,50"
