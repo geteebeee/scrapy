@@ -1,0 +1,36 @@
+"""Export helpers for reviewed transactions."""
+
+from __future__ import annotations
+
+import csv
+import json
+from pathlib import Path
+from typing import Iterable
+
+from .models import Transaction
+
+
+def active_transactions(transactions: Iterable[Transaction]) -> list[Transaction]:
+    """Return transactions not marked ignored."""
+    return [transaction for transaction in transactions if not transaction.ignored]
+
+
+def export_csv(transactions: Iterable[Transaction], path: str | Path) -> None:
+    """Write transactions to CSV."""
+    rows = [transaction.as_dict() for transaction in transactions]
+    fieldnames = ["date", "description", "amount", "page", "category", "notes", "ignored", "raw"]
+    for row in rows:
+        for key in row:
+            if key not in fieldnames:
+                fieldnames.append(key)
+
+    with Path(path).open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def export_json(transactions: Iterable[Transaction], path: str | Path) -> None:
+    """Write transactions to JSON."""
+    payload = [transaction.as_dict() for transaction in transactions]
+    Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
