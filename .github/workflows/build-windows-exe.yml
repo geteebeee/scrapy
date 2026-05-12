@@ -1,0 +1,31 @@
+name: Build Windows GUI executable
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows-exe:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package and build dependencies
+        run: python -m pip install -e ".[build]"
+
+      - name: Build GUI executable
+        run: python scripts/build_exe.py
+
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-transaction-scraper-gui-windows
+          path: dist/pdf-transaction-scraper-gui.exe

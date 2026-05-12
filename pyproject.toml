@@ -1,0 +1,35 @@
+[build-system]
+requires = []
+build-backend = "build_backend"
+backend-path = ["."]
+
+[project]
+name = "pdf-transaction-scraper"
+version = "0.1.0"
+description = "Interactive PDF transaction scraper for reviewing and editing extracted statement lines."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Grego"}]
+dependencies = [
+    "pypdf>=4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+build = [
+    "pyinstaller>=6.0",
+]
+
+[project.scripts]
+pdf-txn-scraper = "pdf_txn_scraper.cli:main"
+pdf-txn-scraper-gui = "pdf_txn_scraper.gui:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.pyright]
+reportMissingImports = "warning"
