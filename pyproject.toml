@@ -1,7 +1,6 @@
 [build-system]
-requires = []
-build-backend = "build_backend"
-backend-path = ["."]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pdf-transaction-scraper"
@@ -27,9 +26,9 @@ build = [
 pdf-txn-scraper = "pdf_txn_scraper.cli:main"
 pdf-txn-scraper-gui = "pdf_txn_scraper.gui:main"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-
-[tool.pyright]
-reportMissingImports = "warning"
