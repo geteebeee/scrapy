@@ -38,6 +38,7 @@ class TransactionScraperApp(tk.Tk):
         file_menu.add_command(label="Open Text...", command=self.open_text)
         file_menu.add_separator()
         file_menu.add_command(label="Export...", command=self.export_rows)
+        file_menu.add_command(label="Export Accounting...", command=self.export_accounting_rows)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.destroy)
         menu.add_cascade(label="File", menu=file_menu)
@@ -48,7 +49,8 @@ class TransactionScraperApp(tk.Tk):
         toolbar.pack(fill=tk.X)
         ttk.Button(toolbar, text="Open PDF", command=self.open_pdf).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(toolbar, text="Open Text", command=self.open_text).pack(side=tk.LEFT, padx=(0, 6))
-        ttk.Button(toolbar, text="Export", command=self.export_rows).pack(side=tk.LEFT, padx=(0, 18))
+        ttk.Button(toolbar, text="Export", command=self.export_rows).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(toolbar, text="Export Accounting", command=self.export_accounting_rows).pack(side=tk.LEFT, padx=(0, 18))
         ttk.Button(toolbar, text="Apply Edit", command=self.apply_edit).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(toolbar, text="Add Row", command=self.add_row).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(toolbar, text="Split After", command=self.split_after).pack(side=tk.LEFT, padx=(0, 6))
@@ -262,6 +264,25 @@ class TransactionScraperApp(tk.Tk):
             self._show_error(exc)
             return
         self.status.set(f"Exported {count} row(s) to {path}.")
+
+    def export_accounting_rows(self) -> None:
+        """Prompt for output path and export mirrored debit/credit rows."""
+        if not self.session.transactions:
+            messagebox.showinfo("Export Accounting", "There are no transactions to export.")
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        include_ignored = messagebox.askyesno("Export Accounting", "Include ignored rows in the export?")
+        try:
+            count = self.session.export_accounting(path, include_ignored=include_ignored)
+        except ReviewError as exc:
+            self._show_error(exc)
+            return
+        self.status.set(f"Exported {count} accounting row(s) to {path}.")
 
     def _refresh_table(self, select: int | None = None) -> None:
         for row in self.tree.get_children():

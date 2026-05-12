@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Iterable
 
-from .export import active_transactions, export_csv, export_json
+from .export import active_transactions, export_accounting_csv, export_csv, export_json
 from .models import Transaction
 
 EDITABLE_FIELDS = {"date", "description", "amount", "category", "notes", "raw"}
@@ -110,3 +110,9 @@ class TransactionReviewSession:
         else:
             raise ReviewError("Format must be csv or json")
         return len(rows)
+
+    def export_accounting(self, output: str | Path, include_ignored: bool = False) -> int:
+        """Export rows plus inverted debit/credit copies and return written row count."""
+        rows = self.transactions if include_ignored else active_transactions(self.transactions)
+        export_accounting_csv(rows, output)
+        return len(rows) * 2

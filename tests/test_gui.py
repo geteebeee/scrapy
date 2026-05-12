@@ -7,6 +7,7 @@ from pdf_txn_scraper.cli import build_parser
 def test_gui_module_exposes_main_without_starting_tk():
     assert callable(gui.main)
     assert gui.TransactionScraperApp.columns[:3] == ("ignored", "date", "description")
+    assert callable(gui.TransactionScraperApp.export_accounting_rows)
 
 
 def test_cli_accepts_gui_without_input():
